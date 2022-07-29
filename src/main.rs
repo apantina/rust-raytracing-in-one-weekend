@@ -12,7 +12,6 @@ fn main() {
     io::stdout().write_all(header.as_bytes()).expect("error getting bytes from header");
 
     let mut j = image_height - 1;
-    let mut write_cnt = 0;
     while j >= 0 {
         let mut i = 0;
         while i < image_width {
@@ -25,9 +24,7 @@ fn main() {
             let ib = (255.999 * b) as i32;
 
             let row = format!("{} {} {}\n", ir, ig, ib);
-
             io::stdout().write_all(row.as_bytes()).expect("error getting bytes from header");
-            write_cnt += 1;
             i += 1;
         }
         j -= 1;
