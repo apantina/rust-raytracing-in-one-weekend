@@ -1,6 +1,9 @@
 use std::io;
 use std::io::Write;
 
+mod vector;
+mod color;
+
 fn main() {
 
     // Image
@@ -15,16 +18,12 @@ fn main() {
     while j >= 0 {
         let mut i = 0;
         while i < image_width {
-            let r: f64 = i as f64 / (image_width - 1) as f64;
-            let g: f64 = j as f64 / (image_height - 1) as f64;
-            let b = 0.25;
-
-            let ir = (255.999 * r) as i32;
-            let ig = (255.999 * g) as i32;
-            let ib = (255.999 * b) as i32;
-
-            let row = format!("{} {} {}\n", ir, ig, ib);
-            io::stdout().write_all(row.as_bytes()).expect("error getting bytes from header");
+            let rgb = vector::Color {
+                x: i as f64 / (image_width - 1) as f64,
+                y: j as f64 / (image_height - 1) as f64,
+                z: 0.25,
+            };
+            color::write_color(io::stdout(), rgb);
             i += 1;
         }
         j -= 1;
