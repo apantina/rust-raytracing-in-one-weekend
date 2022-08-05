@@ -1,12 +1,13 @@
 use std::io;
 use std::io::Write;
+use crate::vector::Vec3;
 
 mod vector;
 mod color;
 mod ray;
 
 
-fn hit_sphere(center: vector::Point3, radius: f64, ray: &ray::Ray) -> bool {
+fn hit_sphere(center: vector::Point3, radius: f64, ray: &ray::Ray) -> f64 {
     let oc = ray.origin - center;
     let a = ray.dir.dot(ray.dir);
     let b = 2.0 * oc.dot(ray.dir);
@@ -14,15 +15,22 @@ fn hit_sphere(center: vector::Point3, radius: f64, ray: &ray::Ray) -> bool {
 
     let discriminant = b * b - 4.0 * a * c;
 
-    discriminant > 0.0
+    if discriminant < 0.0 {
+        return -1.0;
+    } else {
+        return (-b - f64::sqrt(discriminant)) / (2.0 * a);
+    }
 }
 
 fn ray_color(r: &ray::Ray) -> vector::Color {
-    if hit_sphere(vector::Point3{x: 0.0, y: 0.0, z: -1.0}, 0.5, &r) {
-        return vector::Color{x: 1.0, y: 0.0, z: 0.0}
+    let t =  hit_sphere(vector::Point3{x: 0.0, y: 0.0, z: -1.0}, 0.5, &r);
+    if t > 0.0 {
+        let n = (r.at(t) -  vector::Vec3{x: 0.0, y: 0.0, z: -1.0}).unit_vector();
+        return 0.5 * n.map(|x| x + 1.0)
     }
 
     let unit_direction = r.dir.unit_vector();
+
     let t = 0.5 * (unit_direction.y + 1.0);
 
     return (1.0 - t) * vector::Color { x: 1.0, y: 1.0, z: 1.0 }
