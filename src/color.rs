@@ -1,5 +1,5 @@
-use std::io;
 use std::io::{Stdout, Write};
+
 use crate::vector;
 
 /// Write the translated [0,255] value of each color component to standard output.
