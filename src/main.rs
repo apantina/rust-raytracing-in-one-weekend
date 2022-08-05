@@ -4,7 +4,8 @@ use std::io::Write;
 mod vector;
 mod color;
 mod ray;
-
+mod hittable;
+mod sphere;
 
 fn hit_sphere(center: vector::Point3, radius: f64, ray: &ray::Ray) -> f64 {
     let oc = ray.origin - center;
