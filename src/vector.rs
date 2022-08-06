@@ -36,11 +36,6 @@ impl Vec3 {
         *self / self.length()
     }
 
-    /// Creates a vector (x,x,x) from a single value x.
-    fn from(v: f64) -> Vec3 {
-        Vec3 { x: v, y: v, z: v }
-    }
-
     /// Applies `f` to each element of the vector in turn, giving a new vector.
     #[inline]
     pub fn map(self, mut f: impl FnMut(f64) -> f64) -> Self {
@@ -101,5 +96,12 @@ impl Div<f64> for Vec3 {
 
     fn div(self, other: f64) -> Self::Output {
         self.map(|x| x / other)
+    }
+}
+
+impl From<f64> for Vec3 {
+    /// Creates a vector (x,x,x) from a single value x.
+    fn from(v: f64) -> Vec3 {
+        Vec3 { x: v, y: v, z: v }
     }
 }
