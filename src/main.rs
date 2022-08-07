@@ -1,11 +1,11 @@
 use std::io;
 use std::io::Write;
-
-use rand::random;
+use std::sync::Arc;
 
 use crate::camera::Camera;
 use crate::common::random_f64;
 use crate::hittable::{HitRecord, HittableList};
+use crate::material::{Lambertian, Metal};
 use crate::ray::Ray;
 use crate::sphere::Sphere;
 use crate::vector::{Color, Point3, Vec3};
@@ -17,6 +17,7 @@ mod hittable;
 mod sphere;
 mod common;
 mod camera;
+mod material;
 
 fn hit_sphere(center: Point3, radius: f64, ray: &ray::Ray) -> f64 {
     let oc = ray.origin - center;
@@ -30,7 +31,7 @@ fn hit_sphere(center: Point3, radius: f64, ray: &ray::Ray) -> f64 {
         -1.0
     } else {
         (-half_b - f64::sqrt(discriminant)) / a
-    }
+    };
 }
 
 fn ray_color(r: &Ray, world: &HittableList, depth: i32) -> Color {
@@ -42,8 +43,17 @@ fn ray_color(r: &Ray, world: &HittableList, depth: i32) -> Color {
     }
 
     if world.hit(r, 0.001, f64::INFINITY, &mut record) {
-        let target = record.p + Vec3::random_in_hemisphere(record.normal);
-        return 0.5 * ray_color(&Ray { origin: record.p, dir: target - record.p }, &world, depth - 1);
+        let mut scattered = Ray { dir: Vec3::from(0.0), origin: Vec3::from(0.0) };
+        let mut attenuation = Color::from(0.0);
+
+        // TODO: can we do this without cloning? maybe pass the reference somehow?
+        let material = record.material.clone();
+
+        if material.scatter(r, &record, &mut attenuation, &mut scattered) {
+            return attenuation * ray_color(&scattered, world, depth - 1);
+        }
+
+        return Color::from(0.0); // black
     }
 
     let unit_direction = r.dir.unit_vector();
@@ -62,10 +72,17 @@ fn main() {
     let max_depth = 50;
 
     // World
+    let material_ground = Arc::new(Lambertian { albedo: Color { x: 0.8, y: 0.8, z: 0.0 } });
+    let material_center = Arc::new(Lambertian { albedo: Color { x: 0.7, y: 0.3, z: 0.3 } });
+    let material_left = Arc::new(Metal { albedo: Color { x: 0.8, y: 0.8, z: 0.8 } });
+    let material_right = Arc::new(Metal { albedo: Color { x: 0.8, y: 0.6, z: 0.2 } });
+
     let world = HittableList {
         objects: vec![
-            Box::new(Sphere { center: Vec3 { x: 0.0, y: 0.0, z: -1.0 }, radius: 0.5 }),
-            Box::new(Sphere { center: Vec3 { x: 0.0, y: -100.5, z: -1.0 }, radius: 100.0 }),
+            Box::new(Sphere { center: Vec3 { x: 0.0, y: -100.5, z: -1.0 }, radius: 100.0, material: material_ground }),
+            Box::new(Sphere { center: Vec3 { x: 0.0, y: 0.0, z: -1.0 }, radius: 0.5, material: material_center }),
+            Box::new(Sphere { center: Vec3 { x: -1.0, y: 0.0, z: -1.0 }, radius: 0.5, material: material_left }),
+            Box::new(Sphere { center: Vec3 { x: 1.0, y: 0.0, z: -1.0 }, radius: 0.5, material: material_right }),
         ]
     };
 

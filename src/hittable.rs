@@ -1,16 +1,19 @@
+use std::sync::Arc;
+
+use crate::material::{Lambertian, Material};
 use crate::ray::Ray;
 use crate::vector::{Point3, Vec3};
 
-#[derive(Clone, Copy)]
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
     pub t: f64,
     pub front_face: bool,
+    pub material: Arc<dyn Material>,
 }
 
 impl HitRecord {
-    pub fn set_face_normal(mut self, ray: &Ray, outward_normal: Point3) {
+    pub fn set_face_normal(&mut self, ray: &Ray, outward_normal: Point3) {
         self.front_face = ray.dir.dot(outward_normal) < 0.0;
 
         if self.front_face {
@@ -27,6 +30,7 @@ impl HitRecord {
             normal: Vec3::from(0.0),
             t: 0.0,
             front_face: false,
+            material: Arc::new(Lambertian { albedo: Vec3::from(0.0) }),
         }
     }
 }
@@ -41,7 +45,7 @@ pub struct HittableList {
 
 impl HittableList {
     pub fn hit(&self, r: &Ray, t_min: f64, t_max: f64, hit_record: &mut HitRecord) -> bool {
-        let mut temp = HitRecord::empty();
+        let mut temp = hit_record;
 
         let mut hit_anything = false;
         let mut closest_so_far = t_max;
@@ -50,7 +54,6 @@ impl HittableList {
             if object.hit(r, t_min, closest_so_far, &mut temp) {
                 hit_anything = true;
                 closest_so_far = temp.t;
-                *hit_record = temp;
             }
         }
 

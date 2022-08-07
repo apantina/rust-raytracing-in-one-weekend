@@ -78,7 +78,20 @@ impl Vec3 {
             in_unit_sphere
         } else {
             -in_unit_sphere
-        }
+        };
+    }
+
+    /// Returns true if the vector is close to zero in all dimensions.
+    pub fn near_zero(self) -> bool {
+        let epsilon = 1e-8;
+
+        return (f64::abs(self.x) < epsilon) && (f64::abs(self.x) < epsilon)
+            && (f64::abs(self.x) < epsilon);
+    }
+
+    /// Reflects the `v` vector around a surface normal.
+    pub fn reflect(v: Vec3, normal: Vec3) -> Vec3 {
+        return v - 2.0 * v.dot(normal) * normal;
     }
 }
 

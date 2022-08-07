@@ -1,10 +1,14 @@
+use std::sync::Arc;
+
 use crate::hittable::{HitRecord, Hittable};
+use crate::material::Material;
 use crate::ray::Ray;
 use crate::vector::Point3;
 
 pub struct Sphere {
     pub center: Point3,
     pub radius: f64,
+    pub material: Arc<dyn Material>,
 }
 
 
@@ -37,6 +41,7 @@ impl Hittable for Sphere {
 
         let outward_normal = (hit_record.p - self.center) / self.radius;
         hit_record.set_face_normal(ray, outward_normal);
+        hit_record.material = self.material.clone();
 
         return true;
     }
