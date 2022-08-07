@@ -8,12 +8,12 @@ pub(crate) fn write_color(mut out: Stdout, color: vector::Color, samples_per_pix
     let g = color.y;
     let b = color.z;
 
-    // Divide each color component by the number of samples.
+    // Divide each color component by the number of samples. Also gamma-correct for gamma=2.0.
     let scale = 1.0 / samples_per_pixel as f64;
 
-    let r_scaled = r * scale;
-    let g_scaled = g * scale;
-    let b_scaled = b * scale;
+    let r_scaled = f64::sqrt(r * scale);
+    let g_scaled = f64::sqrt(g * scale);
+    let b_scaled = f64::sqrt(b * scale);
 
     // Write out the translated [0, 255] value of each color component.
     let row = format!("{} {} {}\n",

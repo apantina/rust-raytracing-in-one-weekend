@@ -6,6 +6,7 @@ use rand::random;
 use crate::camera::Camera;
 use crate::common::random_f64;
 use crate::hittable::{HitRecord, HittableList};
+use crate::ray::Ray;
 use crate::sphere::Sphere;
 use crate::vector::{Color, Point3, Vec3};
 
@@ -32,11 +33,17 @@ fn hit_sphere(center: Point3, radius: f64, ray: &ray::Ray) -> f64 {
     }
 }
 
-fn ray_color(r: &ray::Ray, world: &HittableList) -> Color {
+fn ray_color(r: &Ray, world: &HittableList, depth: i32) -> Color {
     let mut record = HitRecord::empty();
 
-    if world.hit(r, 0.0, f64::INFINITY, &mut record) {
-        return 0.5 * (record.normal + Color { x: 1.0, y: 1.0, z: 1.0 });
+    // Gather no more light if the ray bounce limit has been exceeded.
+    if depth <= 0 {
+        return Color::from(0.0);
+    }
+
+    if world.hit(r, 0.001, f64::INFINITY, &mut record) {
+        let target = record.p + Vec3::random_in_hemisphere(record.normal);
+        return 0.5 * ray_color(&Ray { origin: record.p, dir: target - record.p }, &world, depth - 1);
     }
 
     let unit_direction = r.dir.unit_vector();
@@ -52,6 +59,7 @@ fn main() {
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
     let image_height = (image_width as f64 / aspect_ratio) as i32;
+    let max_depth = 50;
 
     // World
     let world = HittableList {
@@ -63,13 +71,14 @@ fn main() {
 
     // Camera
     let camera = Camera::new(aspect_ratio);
-    let samples_per_pixel = 10;
+    let samples_per_pixel = 100;
 
     // Render
     let header = format!("P3\n{} {}\n255\n", image_width, image_height);
     io::stdout().write_all(header.as_bytes()).expect("error getting bytes from header");
 
     for j in (0..image_height).rev() {
+        eprintln!("printing line {} / {}", image_height - j, image_height);
         for i in 0..image_width {
             let mut color = Color::from(0.0);
             for _s in 0..samples_per_pixel - 1 {
@@ -77,7 +86,7 @@ fn main() {
                 let v = (j as f64 + random_f64(0.0, 1.0)) / (image_height - 1) as f64;
 
                 let ray = &camera.get_ray(u, v);
-                color = color + ray_color(&ray, &world)
+                color = color + ray_color(&ray, &world, max_depth)
             }
             color::write_color(io::stdout(), color, samples_per_pixel);
         }
