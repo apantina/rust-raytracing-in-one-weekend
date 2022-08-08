@@ -36,27 +36,28 @@ impl HitRecord {
 }
 
 pub trait Hittable {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, hit_record: &mut HitRecord) -> bool;
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
 }
 
 pub struct HittableList {
     pub objects: Vec<Box<dyn Hittable>>,
 }
 
-impl HittableList {
-    pub fn hit(&self, r: &Ray, t_min: f64, t_max: f64, hit_record: &mut HitRecord) -> bool {
-        let mut temp = hit_record;
-
-        let mut hit_anything = false;
+impl Hittable for HittableList {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let mut temp: Option<HitRecord> = None;
         let mut closest_so_far = t_max;
 
         for object in self.objects.iter() {
-            if object.hit(r, t_min, closest_so_far, &mut temp) {
-                hit_anything = true;
-                closest_so_far = temp.t;
+            match object.hit(r, t_min, closest_so_far) {
+                Some(record) => {
+                    closest_so_far = record.t;
+                    temp = Option::from(record)
+                },
+                None => continue
             }
         }
 
-        return hit_anything;
+        return temp;
     }
 }

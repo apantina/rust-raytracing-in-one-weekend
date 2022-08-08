@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crate::camera::Camera;
 use crate::common::random_f64;
-use crate::hittable::{HitRecord, HittableList};
+use crate::hittable::{HitRecord, Hittable, HittableList};
 use crate::material::{Lambertian, Metal};
 use crate::ray::Ray;
 use crate::sphere::Sphere;
@@ -42,19 +42,19 @@ fn ray_color(r: &Ray, world: &HittableList, depth: i32) -> Color {
         return Color::from(0.0);
     }
 
-    if world.hit(r, 0.001, f64::INFINITY, &mut record) {
-        let mut scattered = Ray { dir: Vec3::from(0.0), origin: Vec3::from(0.0) };
-        let mut attenuation = Color::from(0.0);
+    match world.hit(r, 0.001, f64::INFINITY) {
+        Some(record) => {
+            let mut scattered = Ray { dir: Vec3::from(0.0), origin: Vec3::from(0.0) };
+            let mut attenuation = Color::from(0.0);
 
-        // TODO: can we do this without cloning? maybe pass the reference somehow?
-        let material = record.material.clone();
+            if record.material.scatter(r, &record, &mut attenuation, &mut scattered) {
+                return attenuation * ray_color(&scattered, world, depth - 1);
+            }
 
-        if material.scatter(r, &record, &mut attenuation, &mut scattered) {
-            return attenuation * ray_color(&scattered, world, depth - 1);
+            return Color::from(0.0); // black
         }
-
-        return Color::from(0.0); // black
-    }
+        None => Color::from(0.0)
+    };
 
     let unit_direction = r.dir.unit_vector();
     let t = 0.5 * (unit_direction.y + 1.0);
