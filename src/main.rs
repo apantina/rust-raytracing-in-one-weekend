@@ -74,8 +74,8 @@ fn main() {
     // World
     let material_ground = Arc::new(Lambertian { albedo: Color { x: 0.8, y: 0.8, z: 0.0 } });
     let material_center = Arc::new(Lambertian { albedo: Color { x: 0.7, y: 0.3, z: 0.3 } });
-    let material_left = Arc::new(Metal { albedo: Color { x: 0.8, y: 0.8, z: 0.8 } });
-    let material_right = Arc::new(Metal { albedo: Color { x: 0.8, y: 0.6, z: 0.2 } });
+    let material_left = Arc::new(Metal { albedo: Color { x: 0.8, y: 0.8, z: 0.8 }, fuzz: 0.3 });
+    let material_right = Arc::new(Metal { albedo: Color { x: 0.8, y: 0.6, z: 0.2 }, fuzz: 1.0 });
 
     let world = HittableList {
         objects: vec![
