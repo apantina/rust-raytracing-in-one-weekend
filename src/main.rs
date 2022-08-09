@@ -5,7 +5,7 @@ use std::sync::Arc;
 use crate::camera::Camera;
 use crate::common::random_f64;
 use crate::hittable::{HitRecord, Hittable, HittableList};
-use crate::material::{Lambertian, Metal};
+use crate::material::{Dielectric, Lambertian, Metal};
 use crate::ray::Ray;
 use crate::sphere::Sphere;
 use crate::vector::{Color, Point3, Vec3};
@@ -30,13 +30,11 @@ fn hit_sphere(center: Point3, radius: f64, ray: &ray::Ray) -> f64 {
     return if discriminant < 0.0 {
         -1.0
     } else {
-        (-half_b - f64::sqrt(discriminant)) / a
+        (-half_b - discriminant.sqrt()) / a
     };
 }
 
 fn ray_color(r: &Ray, world: &HittableList, depth: i32) -> Color {
-    let mut record = HitRecord::empty();
-
     // Gather no more light if the ray bounce limit has been exceeded.
     if depth <= 0 {
         return Color::from(0.0);
@@ -74,7 +72,7 @@ fn main() {
     // World
     let material_ground = Arc::new(Lambertian { albedo: Color { x: 0.8, y: 0.8, z: 0.0 } });
     let material_center = Arc::new(Lambertian { albedo: Color { x: 0.7, y: 0.3, z: 0.3 } });
-    let material_left = Arc::new(Metal { albedo: Color { x: 0.8, y: 0.8, z: 0.8 }, fuzz: 0.3 });
+    let material_left = Arc::new(Dielectric{refraction_index: 1.5});
     let material_right = Arc::new(Metal { albedo: Color { x: 0.8, y: 0.6, z: 0.2 }, fuzz: 1.0 });
 
     let world = HittableList {

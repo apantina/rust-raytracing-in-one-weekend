@@ -34,7 +34,7 @@ impl Vec3 {
     }
 
     pub fn unit_vector(&self) -> Vec3 {
-        *self / self.length()
+        *self / (self.length())
     }
 
     /// Applies `f` to each element of the vector in turn, giving a new vector.
@@ -93,12 +93,22 @@ impl Vec3 {
     pub fn reflect(v: Vec3, normal: Vec3) -> Vec3 {
         return v - 2.0 * v.dot(normal) * normal;
     }
+
+    /// Refracts a unit vector through a given dielectric.
+    pub fn refract(uv: Vec3, normal: Vec3, etai_over_etat: f64) -> Vec3 {
+        let dt = -uv.dot(normal);
+        let cos_theta = dt.min(1.0);
+        let r_out_perpendicular = etai_over_etat * (uv + cos_theta * normal);
+        // TODO buggy behaviour..reflection not flipped
+        let r_out_parallel = -(1.0 -r_out_perpendicular.length_squared()).abs().sqrt() * normal;
+
+        r_out_perpendicular + r_out_parallel
+    }
 }
 
 // Operator overloading (+, -, unary -, *)
 impl Add for Vec3 {
     type Output = Self;
-
     fn add(self, other: Self) -> Self::Output {
         Vec3 { x: self.x + other.x, y: self.y + other.y, z: self.z + other.z }
     }
