@@ -4,9 +4,6 @@ use std::fs::File;
 use std::io;
 use std::io::Write;
 use std::sync::Arc;
-use image::ColorType;
-
-use image::png::PNGEncoder;
 
 use rayon::prelude::*;
 
@@ -33,6 +30,7 @@ fn hit_sphere(center: Point3, radius: f64, ray: &ray::Ray) -> f64 {
     let a = ray.dir.length_squared();
     let half_b = oc.dot(ray.dir);
     let c = oc.length_squared() - radius * radius;
+
 
     let discriminant = half_b * half_b - a * c;
 
@@ -74,25 +72,13 @@ fn main() {
 
     // Image
     let aspect_ratio = 3.0 / 2.0;
-    let image_width = 800 as usize;
+    let image_width = 1200 as usize;
     let image_height = (image_width as f64 / aspect_ratio) as usize;
     let max_depth = 50;
-    let samples_per_pixel = 50;
+    let samples_per_pixel = 500;
 
     // World
-    let material_ground = Arc::new(Lambertian { albedo: Color { x: 0.8, y: 0.8, z: 0.0 } });
-    let material_center = Arc::new(Lambertian { albedo: Color { x: 0.7, y: 0.3, z: 0.3 } });
-    let material_left = Arc::new(Metal { albedo: Color { x: 0.8, y: 0.8, z: 0.8 }, fuzz: 0.0 });
-    let material_right = Arc::new(Metal { albedo: Color { x: 0.8, y: 0.6, z: 0.2 }, fuzz: 0.0 });
-
-    let world = HittableList {
-        objects: vec![
-            Arc::new(Sphere { center: Vec3 { x: 0.0, y: -100.5, z: -1.0 }, radius: 100.0, material: material_ground }),
-            Arc::new(Sphere { center: Vec3 { x: 0.0, y: 0.0, z: -1.0 }, radius: 0.5, material: material_center }),
-            Arc::new(Sphere { center: Vec3 { x: -1.0, y: 0.0, z: -1.0 }, radius: 0.5, material: material_left }),
-            Arc::new(Sphere { center: Vec3 { x: 1.0, y: 0.0, z: -1.0 }, radius: 0.5, material: material_right }),
-        ]
-    };
+    let world = random_scene();
 
     // Camera
     let lookfrom = Point3 { x: 13.0, y: 2.0, z: 3.0 };
@@ -102,7 +88,7 @@ fn main() {
         lookfrom,
         lookat,
         Point3 { x: 0.0, y: 1.0, z: 0.0 },
-        30.0,
+        20.0,
         aspect_ratio,
         0.1,
         10.0,
