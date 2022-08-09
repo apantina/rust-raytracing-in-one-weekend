@@ -73,7 +73,7 @@ fn main() {
     // World
     let material_ground = Arc::new(Lambertian { albedo: Color { x: 0.8, y: 0.8, z: 0.0 } });
     let material_center = Arc::new(Lambertian { albedo: Color { x: 0.1, y: 0.2, z: 0.5 } });
-    let material_left = Arc::new(&Dielectric { refraction_index: 1.5 });
+    let material_left = Arc::new(Dielectric { refraction_index: 1.5 });
     let material_right = Arc::new(Metal { albedo: Color { x: 0.8, y: 0.6, z: 0.2 }, fuzz: 0.0 });
 
     let world = HittableList {
