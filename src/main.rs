@@ -1,3 +1,4 @@
+use std::f64::consts::PI;
 use std::io;
 use std::io::Write;
 use std::sync::Arc;
@@ -67,13 +68,13 @@ fn main() {
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
     let image_height = (image_width as f64 / aspect_ratio) as i32;
-    let max_depth = 50;
+    let max_depth = 100;
 
     // World
     let material_ground = Arc::new(Lambertian { albedo: Color { x: 0.8, y: 0.8, z: 0.0 } });
-    let material_center = Arc::new(Lambertian { albedo: Color { x: 0.7, y: 0.3, z: 0.3 } });
-    let material_left = Arc::new(Dielectric{refraction_index: 1.5});
-    let material_right = Arc::new(Metal { albedo: Color { x: 0.8, y: 0.6, z: 0.2 }, fuzz: 1.0 });
+    let material_center = Arc::new(Lambertian { albedo: Color { x: 0.1, y: 0.2, z: 0.5 } });
+    let material_left = Arc::new(&Dielectric { refraction_index: 1.5 });
+    let material_right = Arc::new(Metal { albedo: Color { x: 0.8, y: 0.6, z: 0.2 }, fuzz: 0.0 });
 
     let world = HittableList {
         objects: vec![
@@ -85,7 +86,14 @@ fn main() {
     };
 
     // Camera
-    let camera = Camera::new(aspect_ratio);
+    let camera = Camera::new(
+        Point3 { x: -2.0, y: 2.0, z: 1.0 },
+        Point3 { x: 0.0, y: 0.0, z: -1.0 },
+        Point3 { x: 0.0, y: 1.0, z: 0.0 },
+        50.0,
+        aspect_ratio,
+    );
+
     let samples_per_pixel = 100;
 
     // Render
