@@ -8,7 +8,7 @@ use crate::vector::Point3;
 pub struct Sphere {
     pub center: Point3,
     pub radius: f64,
-    pub material: Arc<dyn Material>,
+    pub material: Arc<dyn Material + Send + Sync>,
 }
 
 

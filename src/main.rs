@@ -1,10 +1,18 @@
+use std::alloc::alloc;
 use std::f64::consts::PI;
+use std::fs::File;
 use std::io;
 use std::io::Write;
 use std::sync::Arc;
+use image::ColorType;
+
+use image::png::PNGEncoder;
+
+use rayon::prelude::*;
 
 use crate::camera::Camera;
-use crate::common::random_f64;
+use crate::color::color_to_rgb;
+use crate::common::{random_f64, random_scene};
 use crate::hittable::{HitRecord, Hittable, HittableList};
 use crate::material::{Dielectric, Lambertian, Metal};
 use crate::ray::Ray;
@@ -65,53 +73,75 @@ fn ray_color(r: &Ray, world: &HittableList, depth: i32) -> Color {
 fn main() {
 
     // Image
-    let aspect_ratio = 16.0 / 9.0;
-    let image_width = 400;
-    let image_height = (image_width as f64 / aspect_ratio) as i32;
-    let max_depth = 100;
+    let aspect_ratio = 3.0 / 2.0;
+    let image_width = 800 as usize;
+    let image_height = (image_width as f64 / aspect_ratio) as usize;
+    let max_depth = 50;
+    let samples_per_pixel = 50;
 
     // World
     let material_ground = Arc::new(Lambertian { albedo: Color { x: 0.8, y: 0.8, z: 0.0 } });
-    let material_center = Arc::new(Lambertian { albedo: Color { x: 0.1, y: 0.2, z: 0.5 } });
-    let material_left = Arc::new(Dielectric { refraction_index: 1.5 });
+    let material_center = Arc::new(Lambertian { albedo: Color { x: 0.7, y: 0.3, z: 0.3 } });
+    let material_left = Arc::new(Metal { albedo: Color { x: 0.8, y: 0.8, z: 0.8 }, fuzz: 0.0 });
     let material_right = Arc::new(Metal { albedo: Color { x: 0.8, y: 0.6, z: 0.2 }, fuzz: 0.0 });
 
     let world = HittableList {
         objects: vec![
-            Box::new(Sphere { center: Vec3 { x: 0.0, y: -100.5, z: -1.0 }, radius: 100.0, material: material_ground }),
-            Box::new(Sphere { center: Vec3 { x: 0.0, y: 0.0, z: -1.0 }, radius: 0.5, material: material_center }),
-            Box::new(Sphere { center: Vec3 { x: -1.0, y: 0.0, z: -1.0 }, radius: 0.5, material: material_left }),
-            Box::new(Sphere { center: Vec3 { x: 1.0, y: 0.0, z: -1.0 }, radius: 0.5, material: material_right }),
+            Arc::new(Sphere { center: Vec3 { x: 0.0, y: -100.5, z: -1.0 }, radius: 100.0, material: material_ground }),
+            Arc::new(Sphere { center: Vec3 { x: 0.0, y: 0.0, z: -1.0 }, radius: 0.5, material: material_center }),
+            Arc::new(Sphere { center: Vec3 { x: -1.0, y: 0.0, z: -1.0 }, radius: 0.5, material: material_left }),
+            Arc::new(Sphere { center: Vec3 { x: 1.0, y: 0.0, z: -1.0 }, radius: 0.5, material: material_right }),
         ]
     };
 
     // Camera
-    let camera = Camera::new(
-        Point3 { x: -2.0, y: 2.0, z: 1.0 },
-        Point3 { x: 0.0, y: 0.0, z: -1.0 },
-        Point3 { x: 0.0, y: 1.0, z: 0.0 },
-        50.0,
-        aspect_ratio,
-    );
+    let lookfrom = Point3 { x: 13.0, y: 2.0, z: 3.0 };
+    let lookat = Point3 { x: 0.0, y: 0.0, z: 0.0 };
 
-    let samples_per_pixel = 100;
+    let camera = Camera::new(
+        lookfrom,
+        lookat,
+        Point3 { x: 0.0, y: 1.0, z: 0.0 },
+        30.0,
+        aspect_ratio,
+        0.1,
+        10.0,
+    );
 
     // Render
     let header = format!("P3\n{} {}\n255\n", image_width, image_height);
     io::stdout().write_all(header.as_bytes()).expect("error getting bytes from header");
 
-    for j in (0..image_height).rev() {
-        eprintln!("printing line {} / {}", image_height - j, image_height);
+// create image data structure, chunk into total of <image_width> rows/chunks
+    let mut image = vec![0; (image_width * image_height * 3) as usize];
+    let rows: Vec<(usize, &mut [u8])> = image
+        .chunks_mut((image_width * 3 as usize) as usize).enumerate().collect();
+
+    // process the rows in parallel
+    rows.into_par_iter().for_each(|(j, row)| {
         for i in 0..image_width {
             let mut color = Color::from(0.0);
             for _s in 0..samples_per_pixel - 1 {
                 let u = (i as f64 + random_f64(0.0, 1.0)) / (image_width - 1) as f64;
-                let v = (j as f64 + random_f64(0.0, 1.0)) / (image_height - 1) as f64;
+                let v = (image_height as f64 - (j as f64 + random_f64(0.0, 1.0))) / (image_height - 1) as f64;
 
                 let ray = &camera.get_ray(u, v);
                 color = color + ray_color(&ray, &world, max_depth)
             }
-            color::write_color(io::stdout(), color, samples_per_pixel);
+            let rgb = color_to_rgb(color, samples_per_pixel);
+            row[i * 3] = rgb.0;
+            row[i * 3 + 1] = rgb.1;
+            row[i * 3 + 2] = rgb.2;
         }
+    });
+
+    let mut idx = 0;
+    for _ in 0..image.len() / 3 {
+        let row = format!(
+            "{} {} {}\n",
+            image[idx], image[idx + 1], image[idx + 2]);
+        io::stdout().write_all(row.as_bytes()).expect("error getting bytes from row");
+        idx = idx + 3;
     }
 }
+

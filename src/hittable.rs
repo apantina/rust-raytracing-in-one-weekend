@@ -9,7 +9,7 @@ pub struct HitRecord {
     pub normal: Vec3,
     pub t: f64,
     pub front_face: bool,
-    pub material: Arc<dyn Material>,
+    pub material: Arc<dyn Material + Send + Sync>,
 }
 
 impl HitRecord {
@@ -40,7 +40,7 @@ pub trait Hittable {
 }
 
 pub struct HittableList {
-    pub objects: Vec<Box<dyn Hittable>>,
+    pub objects: Vec<Arc<dyn Hittable + Send + Sync>>,
 }
 
 impl Hittable for HittableList {
@@ -53,7 +53,7 @@ impl Hittable for HittableList {
                 Some(record) => {
                     closest_so_far = record.t;
                     temp = Option::from(record)
-                },
+                }
                 None => continue
             }
         }
