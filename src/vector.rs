@@ -100,7 +100,7 @@ impl Vec3 {
         let cos_theta = dt.min(1.0);
         let r_out_perpendicular = etai_over_etat * (uv + cos_theta * normal);
         // TODO buggy behaviour..reflection not flipped
-        let r_out_parallel = -(1.0 - r_out_perpendicular.length_squared()).abs().sqrt() * normal;
+        let r_out_parallel = (1.0 - r_out_perpendicular.length_squared()).abs().sqrt() * normal;
 
         r_out_perpendicular + r_out_parallel
     }
