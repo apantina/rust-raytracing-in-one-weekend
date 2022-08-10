@@ -1,16 +1,6 @@
-use std::io::{Stdout, Write};
+use crate::Color;
 
-use crate::{Color, vector};
-
-/// Write the translated [0,255] value of each color component to standard output.
-pub(crate) fn write_color(mut out: Stdout, color: Color, samples_per_pixel: usize) {
-    let rgb = color_to_rgb(color, samples_per_pixel);
-    // Write out the translated [0, 255] value of each color component.
-
-    let row = format!("{} {} {}\n", rgb.0, rgb.1, rgb.2);
-    out.write_all(row.as_bytes()).expect("error getting bytes from row");
-}
-
+/// Translate Color coordinate values to [0,255] RGB values.
 pub fn color_to_rgb(color: Color, samples_per_pixel: usize) -> (u8, u8, u8) {
     let r = color.x;
     let g = color.y;

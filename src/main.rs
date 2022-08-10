@@ -1,9 +1,5 @@
-use std::alloc::alloc;
-use std::f64::consts::PI;
-use std::fs::File;
 use std::io;
 use std::io::Write;
-use std::sync::Arc;
 
 use rayon::prelude::*;
 
@@ -24,22 +20,6 @@ mod sphere;
 mod common;
 mod camera;
 mod material;
-
-fn hit_sphere(center: Point3, radius: f64, ray: &ray::Ray) -> f64 {
-    let oc = ray.origin - center;
-    let a = ray.dir.length_squared();
-    let half_b = oc.dot(ray.dir);
-    let c = oc.length_squared() - radius * radius;
-
-
-    let discriminant = half_b * half_b - a * c;
-
-    return if discriminant < 0.0 {
-        -1.0
-    } else {
-        (-half_b - discriminant.sqrt()) / a
-    };
-}
 
 fn ray_color(r: &Ray, world: &HittableList, depth: i32) -> Color {
     // Gather no more light if the ray bounce limit has been exceeded.
@@ -75,7 +55,7 @@ fn main() {
     let image_width = 1200 as usize;
     let image_height = (image_width as f64 / aspect_ratio) as usize;
     let max_depth = 50;
-    let samples_per_pixel = 500;
+    let samples_per_pixel = 10;
 
     // World
     let world = random_scene();
