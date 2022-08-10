@@ -1,5 +1,6 @@
 use std::io;
 use std::io::Write;
+use std::time::Instant;
 
 use rayon::prelude::*;
 
@@ -51,11 +52,11 @@ fn ray_color(r: &Ray, world: &HittableList, depth: i32) -> Color {
 fn main() {
 
     // Image
-    let aspect_ratio = 3.0 / 2.0;
-    let image_width = 1200 as usize;
+    let aspect_ratio = 4.0 / 3.0;
+    let image_width = 800 as usize;
     let image_height = (image_width as f64 / aspect_ratio) as usize;
     let max_depth = 50;
-    let samples_per_pixel = 10;
+    let samples_per_pixel = 64;
 
     // World
     let world = random_scene();
@@ -75,6 +76,7 @@ fn main() {
     );
 
     // Render
+    let now = Instant::now();
     let header = format!("P3\n{} {}\n255\n", image_width, image_height);
     io::stdout().write_all(header.as_bytes()).expect("error getting bytes from header");
 
@@ -109,5 +111,8 @@ fn main() {
         io::stdout().write_all(row.as_bytes()).expect("error getting bytes from row");
         idx = idx + 3;
     }
+
+    let elapsed_time = now.elapsed();
+    eprintln!("Rendering took {} ms.", elapsed_time.as_millis());
 }
 

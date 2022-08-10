@@ -7,22 +7,25 @@ This was done for the sole reason of learning Rust via an actual project, so don
 Apart from the tutorial itself, parallel processing was also added using the `rayon` crate.
 
 ## Building and running
-Build the program using `cargo build`.
+Build the program using `cargo build --release`.
 
 Then you can run the ray tracer, which outputs the image in PPM format to the standard output.
 You can redirect this image to a file: 
 
 ```bash
-./target/debug/raytracing-one-weekend > image.ppm
+./target/release/raytracing-one-weekend > image.ppm
 ```
 
-Rendering the full image may take a while, took about 3 minutes on my poor little laptop :D
-The `max_depth` and `samples_per_pixel` parameters to make the image more detailed, requiring more processing time.
+Rendering the full image may take a while, took about 1.5 minutes on my poor little laptop :D
+The `max_depth` and `samples_per_pixel` parameters can be tuned to make the image more detailed, requiring more processing time.
 
 Rendering of the final image (using parallel processing via `rayon`):
 ```bash
-❯ time ./target/debug/rust-raytracing-in-one-weekend > image.ppm && xdg-open image.ppm
-./target/debug/rust-raytracing-in-one-weekend > image.ppm  1623,51s user 2,42s system 732% cpu 3:41,87 total
+❯ cargo build --release
+   Compiling rust-raytracing-in-one-weekend v0.1.0 (/home/ardi/projects/rust-raytracing-in-one-weekend)
+    Finished release [optimized] target(s) in 0.86s
+❯ ./target/release/rust-raytracing-in-one-weekend > image.ppm
+Rendering took 91032 ms.
 ```
 CPU: Intel i7-4700MQ (8) @ 3.400GHz
 
