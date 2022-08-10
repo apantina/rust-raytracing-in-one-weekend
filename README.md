@@ -26,4 +26,5 @@ Rendering of the final image (using parallel processing via `rayon`):
 ```
 CPU: Intel i7-4700MQ (8) @ 3.400GHz
 
-![image](./blob/master/image.ppm?raw=true)
+## Final render
+![image](./image.png?raw=true)
